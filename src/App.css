@@ -1,0 +1,85 @@
+/* .container{
+  display: flex;
+} */
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spacing{
+  display: flex;
+  justify-content:space-evenly;
+  padding: 15px;
+}
+.filter{
+  color:black;
+  font-weight:bolder
+}
+.slider{
+ display:flex;
+ justify-content:center;
+ 
+
+}
+label,select{
+  margin: 10px;
+}
+.range{
+  align-items: flex-start;
+  vertical-align: middle;
+  justify-content:center;
+ 
+ 
+}
+/* .label{
+  padding: 15px;;
+  
+} */
+.category{
+  margin: 10px;
+  background-color: #61dafb;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: left;
+  font-weight: bold;
+}
+ul,li{
+ text-align: left;
+ margin: 10px;
+}
+.microphone-wrapper{
+  padding: 15px;
+}

@@ -9,6 +9,7 @@ import axios from "axios";
 import { DigitalTwinContext } from "./DigitalTwinContext";
 import { DigitalTwinStatusContext } from "./DigitalTwinStatusContext";
 import { AirQualityContext } from "./AirQualityContext";
+import Recognition from "./WebSpeechAPI";
 // {
 //   "room_id": "0090",
 //   "device_id": "Raspi-3-1",
@@ -48,6 +49,7 @@ function App() {
   }
   function CheckDigitalTwinsCapability(dtData, pageno) {
     if (dtData.map((i) => i === "AirQuality")) {
+      // console.log("comes here");
       let Results = axios
         .get(
           `https://airquality.se.jku.at/smartroomairquality-test/Room/0090/AirQuality/?page=${pageno}&size=100`
@@ -83,19 +85,34 @@ function App() {
       10
     );
 
-    console.log(timeDifferenceHours, timeDifferenceMinutes);
+    // console.log(
+    //   lastRecord,
+    //   "pages",
+    //   pages,
+    //   "td",
+    //   timeDifferenceDays,
+    //   days,
+    //   "th",
+    //   hours,
+    //   "tm",
+    //   timeDifferenceMinutes,
+    //   minutes,
+    //   currentDTStatus
+    // );
     if (timeDifferenceDays > 1) {
       setCurrentDTStatus("inactive");
       setDays(timeDifferenceDays);
-    } else if (timeDifferenceMinutes > 60) {
-      setCurrentDTStatus("active");
-      timeDifferenceHours += timeDifferenceMinutes / 60;
+    } else if (timeDifferenceHours >= 1) {
+      setCurrentDTStatus("inactive");
       setHours(timeDifferenceHours);
+    } else if (timeDifferenceMinutes >= 60) {
+      setCurrentDTStatus("inactive");
+      setHours(timeDifferenceMinutes / 60);
     } else if (timeDifferenceMinutes < 60) {
       setCurrentDTStatus("active");
       setMinutes(timeDifferenceMinutes);
     } else {
-      setCurrentDTStatus("active");
+      // setCurrentDTStatus("active");
       setMinutes(timeDifferenceMinutes);
     }
   }
@@ -104,6 +121,7 @@ function App() {
   }, []);
   React.useEffect(() => {
     if (digitalTwinData.length) {
+      // console.log(digitalTwinData.length);
       CheckDigitalTwinsCapability(digitalTwinData, pages);
     }
   }, [digitalTwinData, pages]);
@@ -118,8 +136,9 @@ function App() {
           value={{ currentDTStatus, days, hours, minutes, lastRecord }}
         >
           <AirQualityContext.Provider value={airQualityData}>
-            <SpeechSynthesis />
+            {/* <SpeechSynthesis /> */}
             <SpeechRecognition />
+            {/* <Recognition /> */}
           </AirQualityContext.Provider>
         </DigitalTwinStatusContext.Provider>
         {/* <NotificationComponent data={airQualityData} rules={Rules} /> */}

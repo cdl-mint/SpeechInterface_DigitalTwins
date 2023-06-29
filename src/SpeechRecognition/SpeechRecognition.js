@@ -8,28 +8,70 @@ import {
   smartPlugVentilatorModel,
   smartLightModel,
   airQualityModel,
+  useCases,
+  gettingStarted,
 } from "../NLModel";
 import { DigitalTwinContext } from "../DigitalTwinContext";
 import { DigitalTwinStatusContext } from "../DigitalTwinStatusContext";
-
+import "../App.css";
 function Recognition() {
   const digitalTwinData = React.useContext(DigitalTwinContext);
   const { currentDTStatus, days, hours, minutes, lastRecord } =
     React.useContext(DigitalTwinStatusContext);
 
+  const useCasesAvailable = [...useCases[0].capabilities];
+
   const smartRoomPlugDevice = [...smartPlugVentilatorModel[0].device];
+  const smartRoomPlugAction = [
+    ...smartPlugVentilatorModel[0].actions,
+    ...smartPlugVentilatorModel[0].parameter,
+  ];
   const smartRoomLightDevice = [...smartLightModel[0].device];
+  const smartRoomLightAction = [
+    ...smartLightModel[0].actions,
+    ...smartLightModel[0].parameter,
+  ];
   const airQualityDevice = [...airQualityModel[0].device];
-  const airQualityAction = [...airQualityModel[0].actions];
   const airQualityActionParameter = [
     ...airQualityModel[0].actions,
-    ...airQualityModel[0].parameters,
+    ...airQualityModel[0].parameter,
   ];
-
+  const [matchedCommand, setMatchedCommand] = React.useState("");
+  const [speechInput, setSpeechInput] = React.useState("");
+  const [matchingRatio, setMatchingRatio] = React.useState(0);
+  const [useCase, setUseCase] = React.useState("");
+  const [speechLog, setSpeechLog] = React.useState([]);
   const commands = [
     {
-      command: "What are the available digital twins",
-      callback: () => {
+      command: gettingStarted,
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
+        setMatchedCommand(command);
+        setSpeechInput(spokenPhrase);
+        setMatchingRatio(similarityRatio);
+        setUseCase("introduction");
+        if (command) {
+          let msg = new SpeechSynthesisUtterance();
+          msg.text = `Hello, I can provide information about the following use cases ${useCasesAvailable}`;
+          window.speechSynthesis.speak(msg);
+        } else {
+          let msg = new SpeechSynthesisUtterance();
+          msg = new SpeechSynthesisUtterance();
+          msg.text = `Sorry i dont understand, try commands related to ${useCasesAvailable}`;
+          window.speechSynthesis.speak(msg);
+        }
+      },
+      bestMatchOnly: true,
+      isFuzzyMatch: true,
+      fuzzyMatchingThreshold: 0.8,
+    },
+    {
+      command: "(What are the) available digital twins",
+      callback: ({ command, spokenPhrase, similarityRatio }) => {
+        setMatchedCommand(command);
+        setSpeechInput(spokenPhrase);
+        setMatchingRatio(similarityRatio);
+        setUseCase("digital twin availability");
         let msg = new SpeechSynthesisUtterance();
         if (digitalTwinData) {
           digitalTwinData.map((d) => {
@@ -42,26 +84,35 @@ function Recognition() {
           window.speechSynthesis.speak(msg);
         }
       },
+      bestMatchOnly: true,
+      isFuzzyMatch: true,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
-      command: "Which digital twins are active",
-      callback: () => {
+      command: "(Which) digital twins (are) active",
+
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
+        setMatchedCommand(command);
+        setSpeechInput(spokenPhrase);
+        setMatchingRatio(similarityRatio);
+        setUseCase("active twins");
         let msg = new SpeechSynthesisUtterance();
         if (lastRecord) {
           if (days) {
             msg.text = `There are no active twins, The digital twin is currently ${currentDTStatus}, last recorded measurement was 
-             ${
-               days
-                 ? days.toLocaleString("en") + "days"
-                 : hours
-                 ? hours.toLocaleString("en") + "hours"
-                 : minutes
-                 ? minutes.toLocaleString("en") + "minutes"
-                 : "not found"
-             } ago ,
-            The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
-              "en"
-            )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
+               ${
+                 days
+                   ? days.toLocaleString("en") + "days"
+                   : hours
+                   ? hours.toLocaleString("en") + "hours"
+                   : minutes
+                   ? minutes.toLocaleString("en") + "minutes"
+                   : "not found"
+               } ago ,
+              The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
+                "en"
+              )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
               "en"
             )} degree celcius, and humidity is ${lastRecord.humidity.toLocaleString(
               "en"
@@ -70,18 +121,18 @@ function Recognition() {
             handleReset();
           } else {
             msg.text = `The digital twin is currently ${currentDTStatus}, last recorded measurement was 
-          ${
-            days
-              ? days.toLocaleString("en") + "days"
-              : hours
-              ? hours.toLocaleString("en") + "hours"
-              : minutes
-              ? minutes.toLocaleString("en") + "minutes"
-              : "not found"
-          } ago ,
-         The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
-           "en"
-         )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
+            ${
+              days
+                ? days.toLocaleString("en") + "days"
+                : hours
+                ? hours.toLocaleString("en") + "hours"
+                : minutes
+                ? minutes.toLocaleString("en") + "minutes"
+                : "not found"
+            } ago ,
+           The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
+             "en"
+           )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
               "en"
             )} degree celcius, and humidity is ${lastRecord.humidity.toLocaleString(
               "en"
@@ -94,123 +145,102 @@ function Recognition() {
           window.speechSynthesis.speak(msg);
         }
       },
+      bestMatchOnly: true,
+      isFuzzyMatch: true,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
       command: airQualityDevice,
-      callback: (command) => {
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
         if (command) {
+          setMatchedCommand(command);
+          setSpeechInput(spokenPhrase);
+          setMatchingRatio(similarityRatio);
+          setUseCase("air quality device");
           let msg = new SpeechSynthesisUtterance();
-          msg.text = `The ${command} matches with the air quality digital twin`;
+          msg.text = `The ${command} matches with the air quality digital twin, to get more information, use key words such as ${airQualityActionParameter}`;
           window.speechSynthesis.speak(msg);
         } else {
           let msg = new SpeechSynthesisUtterance();
           msg.text = `Sorry the avaialble devices for the air quality use case are ${airQualityDevice}`;
           window.speechSynthesis.speak(msg);
         }
-        // if (lastRecord) {
-        //   let msg = new SpeechSynthesisUtterance();
-        //   msg.text = `The air quality digital twin is currently ${currentDTStatus}, last recorded measurement was
-        //          ${
-        //            days
-        //              ? days.toLocaleString("en") + "days"
-        //              : hours
-        //              ? hours.toLocaleString("en") + "hours"
-        //              : minutes
-        //              ? minutes.toLocaleString("en") + "minutes"
-        //              : "not found"
-        //          } ago ,
-        //    The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
-        //      "en"
-        //    )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
-        //     "en"
-        //   )} degree celcius, and humidity is ${lastRecord.humidity.toLocaleString(
-        //     "en"
-        //   )} rh`;
-        //   window.speechSynthesis.speak(msg);
-        // } else {
-        //   let msg = new SpeechSynthesisUtterance();
-        //   msg.text = `There are no entry available for the air quality digital twins`;
-        //   window.speechSynthesis.speak(msg);
-        // }
       },
       // matchInterim: true,
       bestMatchOnly: true,
       isFuzzyMatch: true,
-      fuzzyMatchingThreshold: 0.2,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
-      command: [...airQualityModel[0].parameters],
-      callback: (command) => {
-        let msg = new SpeechSynthesisUtterance();
-        console.log(command, typeof command);
+      command: airQualityActionParameter,
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
         if (command) {
+          setMatchedCommand(command);
+          setSpeechInput(spokenPhrase);
+          setMatchingRatio(similarityRatio);
+          setUseCase("air quality action");
+          let msg = new SpeechSynthesisUtterance();
+          msg = new SpeechSynthesisUtterance();
           msg.text = `The ${command} keyword matches with the air quality information`;
           window.speechSynthesis.speak(msg);
-          handleReset();
         } else {
           let msg = new SpeechSynthesisUtterance();
+          msg = new SpeechSynthesisUtterance();
           msg.text = `Sorry the available parameters for the air quality use case are ${airQualityActionParameter}`;
           window.speechSynthesis.speak(msg);
         }
-        let actionFound;
-
-        // if (airQualityAction.indexOf(command)) {
-        //   actionFound = command;
-        // let msg = new SpeechSynthesisUtterance();
-        // msg.text = `The action that is performed is ${command} with air quality twin`;
-        // window.speechSynthesis.speak(msg);
         if (lastRecord) {
           let msg = new SpeechSynthesisUtterance();
+          msg = new SpeechSynthesisUtterance();
           msg.text = `The air quality digital twin is currently ${currentDTStatus}, last recorded measurement was
-                       ${
-                         days
-                           ? days.toLocaleString("en") + "days"
-                           : hours
-                           ? hours.toLocaleString("en") + "hours"
-                           : minutes
-                           ? minutes.toLocaleString("en") + "minutes"
-                           : "not found"
-                       } ago ,
-                 The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
-                   "en"
-                 )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
+                         ${
+                           days
+                             ? days.toLocaleString("en") + "days"
+                             : hours
+                             ? hours.toLocaleString("en") + "hours"
+                             : minutes
+                             ? minutes.toLocaleString("en") + "minutes"
+                             : "not found"
+                         } ago ,
+                   The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
+                     "en"
+                   )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
             "en"
           )} degree celcius, and humidity is ${lastRecord.humidity.toLocaleString(
             "en"
           )} rh`;
           window.speechSynthesis.speak(msg);
-          handleReset();
         } else {
           let msg = new SpeechSynthesisUtterance();
+          msg = new SpeechSynthesisUtterance();
           msg.text = `There are no entry available for the air quality digital twins`;
           window.speechSynthesis.speak(msg);
         }
-
-        // } else {
-        //   let msg = new SpeechSynthesisUtterance();
-        //   msg.text = `There are no action keyword that matches ${airQualityAction}`;
-        //   window.speechSynthesis.speak(msg);
-        // }
       },
 
       bestMatchOnly: true,
       isFuzzyMatch: true,
-      fuzzyMatchingThreshold: 0.2,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
       command: smartRoomLightDevice,
-      callback: (command) => {
+      callback: (command, spokenPhrase, similarityRatio) => {
         if (command) {
+          console.log(command, spokenPhrase, similarityRatio);
           let msg = new SpeechSynthesisUtterance();
-          msg.text = `The ${command} matches with the smart room use case and device type light`;
+          msg.text = `The ${command} matches with the smart room use case and device type light, to get more information, use key words such as ${smartRoomLightAction} `;
           window.speechSynthesis.speak(msg);
-          handleReset();
+          setMatchedCommand(command);
+          setSpeechInput(spokenPhrase);
+          setMatchingRatio(similarityRatio);
+          setUseCase("smart room light");
           // let selectedcolor = window.w3color(command);
           // let hexcolor = selectedcolor.toHexString();
           // console.log(typeof hexcolor);
-          // if (smartPlugVentilatorModel.indexOf(command)) {
-          //   ChangeColorOfLight(hexcolor);
-          // }
+          // ChangeColorOfLight(hexcolor);
+          //handleReset();
         } else {
           let msg = new SpeechSynthesisUtterance();
           msg.text = `Sorry the avaialble names indicating the device light are ${smartRoomLightDevice}`;
@@ -219,16 +249,47 @@ function Recognition() {
       },
       bestMatchOnly: true,
       isFuzzyMatch: true,
-      fuzzyMatchingThreshold: 0.2,
+      fuzzyMatchingThreshold: 0.8,
+    },
+    {
+      command: smartRoomLightAction,
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
+        if (command) {
+          setMatchedCommand(command);
+          setSpeechInput(spokenPhrase);
+          setMatchingRatio(similarityRatio);
+          setUseCase("smart room light action");
+          let msg = new SpeechSynthesisUtterance();
+          msg.text = `The color ${command} matches with the smart room light`;
+          window.speechSynthesis.speak(msg);
+          let selectedcolor = window.w3color(command);
+          let hexcolor = selectedcolor.toHexString();
+          console.log(typeof hexcolor);
+          ChangeColorOfLight(hexcolor);
+          //handleReset();
+        } else {
+          let msg = new SpeechSynthesisUtterance();
+          msg.text = `Sorry i cannot identify the color, can you try colors like red, green`;
+          window.speechSynthesis.speak(msg);
+        }
+      },
+      bestMatchOnly: true,
+      isFuzzyMatch: true,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
       command: smartRoomPlugDevice,
-      callback: (command) => {
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
         if (command) {
+          setMatchedCommand(command);
+          setSpeechInput(spokenPhrase);
+          setMatchingRatio(similarityRatio);
+          setUseCase("smart room plug");
           let msg = new SpeechSynthesisUtterance();
-          msg.text = `The ${command} matches with the smart room use case and device type smart plug ventilator`;
+          msg.text = `The ${command} matches with the smart room use case and device type smart plug ventilator, to get more information, use key words such as ${smartRoomPlugAction}`;
           window.speechSynthesis.speak(msg);
-          handleReset();
         } else {
           let msg = new SpeechSynthesisUtterance();
           msg.text = `Sorry the avaialble names indicating the device smart plug ventilator are ${smartRoomPlugDevice}`;
@@ -237,48 +298,62 @@ function Recognition() {
       },
       bestMatchOnly: true,
       isFuzzyMatch: true,
-      fuzzyMatchingThreshold: 0.2,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
-      command: "quality",
-      callback: () => {
-        play();
+      command: smartRoomPlugAction,
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
+        if (command) {
+          setMatchedCommand(command);
+          setSpeechInput(spokenPhrase);
+          setMatchingRatio(similarityRatio);
+          setUseCase("smart room plug action");
+          let msg = new SpeechSynthesisUtterance();
+          msg.text = `The ${command} matches with toggling the smart room ventilator`;
+          window.speechSynthesis.speak(msg);
+          TogglePlug();
+        } else {
+          let msg = new SpeechSynthesisUtterance();
+          msg.text = `Sorry the  ${command} does not allow me to toggle the ventilator, try to use key words such as ${smartRoomPlugAction}`;
+          window.speechSynthesis.speak(msg);
+        }
       },
+      bestMatchOnly: true,
+      isFuzzyMatch: true,
+      fuzzyMatchingThreshold: 0.8,
     },
     {
-      command: "reset",
-      callback: () => {
+      command: ["reset", "clear"],
+      callback: (command, spokenPhrase, similarityRatio) => {
+        console.log(command, spokenPhrase, similarityRatio);
+        setMatchedCommand(command);
+        setSpeechInput(spokenPhrase);
+        setMatchingRatio(similarityRatio);
         handleReset();
       },
+      bestMatchOnly: true,
+      isFuzzyMatch: true,
+      fuzzyMatchingThreshold: 0.8,
     },
   ];
-  const { transcript, resetTranscript } = useSpeechRecognition({ commands });
+
+  const {
+    transcript,
+    interimTranscript,
+    finalTranscript,
+    resetTranscript,
+    listening,
+  } = useSpeechRecognition({ commands });
   const [isListening, setIsListening] = React.useState(false);
   const microphoneRef = React.useRef(null);
   const [response, setResponse] = React.useState({});
   const [token, setToken] = React.useState();
-  const play = () => {
-    //let result = filteredData.map((i) => i[selectedProperty]);
-    //console.log("result", result);
 
-    let msg = new SpeechSynthesisUtterance();
-    msg.text = `The digital twin is currently ${currentDTStatus}, last recorded measurement was ${days.toLocaleString(
-      "en"
-    )} ago,
-      The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
-        "en"
-      )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
-      "en"
-    )} degree celcius, and humidity is ${lastRecord.humidity.toLocaleString(
-      "en"
-    )}`;
-
-    window.speechSynthesis.speak(msg);
-  };
   function Authenticate() {
     const data = {
-      username: "SEPR_Team1",
-      password: "kn*tvQkWKen3kgXt",
+      username: "SEPR_Team2",
+      password: "HWexZ^X6a6X^X4*k",
     };
     const result = axios
       .post(
@@ -336,13 +411,13 @@ function Recognition() {
     console.log(result);
     return response;
   }
-  if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
-    return (
-      <div className="mircophone-container">
-        Browser does not Support Speech Recognition.
-      </div>
-    );
-  }
+  // if (!browserSupportsSpeechRecognition()) {
+  //   return (
+  //     <div className="mircophone-container">
+  //       Browser does not Support Speech Recognition.
+  //     </div>
+  //   );
+  // }
   const handleListing = () => {
     setIsListening(true);
     microphoneRef.current.classList.add("listening");
@@ -357,8 +432,31 @@ function Recognition() {
   };
   const handleReset = () => {
     stopHandle();
+    SpeechRecognition.abortListening();
     resetTranscript();
   };
+  const errorHandling = () => {
+    let msg = new SpeechSynthesisUtterance();
+    msg.text = `The command ${transcript} does not match with any of the commands, please try commands related to digital twin, air quality, smart room `;
+    window.speechSynthesis.speak(msg);
+  };
+  const successHandling = () => {
+    let msg = new SpeechSynthesisUtterance();
+    msg.text = `The command ${transcript} is executed successfully `;
+    window.speechSynthesis.speak(msg);
+  };
+
+  React.useEffect(() => {
+    setSpeechLog({
+      transcript: transcript,
+      matchedCommand: matchedCommand,
+      speechInput: speechInput,
+      matchingRatio: matchingRatio,
+      useCase: useCase,
+    });
+  }, [transcript, matchedCommand, speechInput, matchingRatio, useCase]);
+  console.log(speechLog);
+
   return (
     <div className="microphone-wrapper">
       <h2>Speech Recognition</h2>
@@ -379,6 +477,7 @@ function Recognition() {
           </button>
         )}
       </div>
+      {matchedCommand.length < 1 ? errorHandling() : ""}
       {transcript && (
         <div className="microphone-result-container">
           <div className="microphone-result-text">{transcript}</div>
@@ -387,6 +486,64 @@ function Recognition() {
           </button>
         </div>
       )}
+
+      <div className="container">
+        <div className="left">
+          <div className="row">
+            <div className="col-sm-6">
+              <em>transcript (interpreted text)</em>
+            </div>
+            <div className="col-sm-6">{transcript}</div>
+          </div>
+          <br />
+          <div className="row">
+            <div className="col-sm-6">
+              <em>interim (guessed text)</em>
+            </div>
+            <div className="col-sm-6">{interimTranscript}</div>
+          </div>
+          <br />
+          <div className="row">
+            <div className="col-sm-6">
+              <em>final text</em>
+            </div>
+            <div className="col-sm-6">{finalTranscript}</div>
+          </div>
+          <br />
+        </div>
+        <div className="right">
+          <div className="row">
+            <div className="col-sm-6">
+              <em>Matched command</em>
+            </div>
+            <div className="col-sm-6">{matchedCommand}</div>
+          </div>
+          <br />
+          <div className="row">
+            <div className="col-sm-6">
+              <em>spoken Input</em>
+            </div>
+            <div className="col-sm-6"> {speechInput}</div>
+          </div>
+          <br />
+          <div className="row">
+            <div className="col-sm-6">
+              <em>similarity Ratio</em>
+            </div>
+
+            <div className="col-sm-6">{matchingRatio}</div>
+          </div>
+          <br />
+          <div className="row">
+            <div className="col-sm-6">
+              <em>use case</em>
+            </div>
+
+            <div className="col-sm-6"> {useCase}</div>
+          </div>
+          <br />
+        </div>
+      </div>
     </div>
   );
 }

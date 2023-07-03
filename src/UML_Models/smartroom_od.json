@@ -1,0 +1,38 @@
+[
+    {
+        "name": "SmartPlug1",
+        "type": "Ventilator"
+    },
+    {
+        "name": "Licht",
+        "type": "Light"
+    },
+    {
+        "name": "0090",
+        "type": "Room",
+        "relations":[
+            {
+                "type": "lights",
+                "target": "Licht"
+            },
+            {
+                "type": "ventilators",
+                "target": "SmartPlug1"
+            }
+        ]
+    },
+    {
+        "name": "Room106",
+        "type": "Room",
+        "relations":[
+            {
+                "type": "lights",
+                "target": "Light2"
+            },
+            {
+                "type": "ventilators",
+                "target": "Ventilator2"
+            }
+        ]
+    }
+]

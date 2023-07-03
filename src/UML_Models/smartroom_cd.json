@@ -1,0 +1,118 @@
+[
+    {
+        "name": "Ventilator",
+        "type": "class",
+        "attributes": [
+            {
+                "name": "is_turned_on",
+                "type": "Boolean"
+            }
+        ],
+        "operations": [
+            {
+                "name": "toggle_ventilator",
+                "url":"/Rooms/0090/Ventilators/SmartPlug1/Activation",
+                "parameters": [],
+                "returnType": null                
+            },
+            {
+                "name": "turn_on_ventilator",
+                "url":"/Rooms/0090/Ventilators/SmartPlug1/Operations",
+                "parameters": {
+                    "turnon": true
+                  },
+                "returnType": null
+            },
+            {
+                "name": "turn_off_ventilator",
+                "url":"/Rooms/0090/Ventilators/SmartPlug1/Operations",
+                "parameters": {
+                    "turnon": false
+                  },
+                "returnType": null
+            }
+        ]
+    },
+    {
+        "name": "Light",
+        "type": "class",
+        "attributes":[
+            {
+                "name": "is_turned_on",
+                "type": "Boolean"
+            },
+            {
+                "name": "color",
+                "type": "String"
+            }
+        ],
+        "operations":[
+            {
+                "name": "turn_on_light",
+                "url":"/Rooms/0090/Lights/Licht/Activation",
+                "parameters": {
+                    "turnon": true
+                  },
+               
+                "returnType": null
+            },
+            {
+                "name": "turn_off_light",
+                "url":"/Rooms/0090/Lights/Licht/Activation",
+                "parameters": {
+                    "turnon": false
+                  },
+                "returnType": null
+                },
+            {
+                "name": "switch_color_to_*",
+                "url":"/Rooms/0090/Lights/Licht/SetColor",
+                "parameters": {
+                    "turnon": true,
+                    "brightness": 0,
+                    "hex": ""
+                }
+            }
+        ]
+    },
+    {
+        "name": "Room",
+        "type": "class",
+        "attributes":[
+            {
+                "name": "co2",
+                "type": "float"
+            },
+            {
+                "name": "temperature",
+                "type": "float"
+            },
+            {
+                "name": "humidity",
+                "type": "float"
+            },
+            {
+                "name": "numberOfPeople",
+                "type": "int"
+            }
+        ],
+        "operations":[
+            {
+            "name":"get_air_quality",
+            "parameters": [],
+            "returnType": "json"
+            }
+           
+        ],
+        "relations":[
+            {
+                "name": "lights",
+                "target": "Light"
+            },
+            {
+                "name": "ventilators",
+                "target": "Ventilator"
+            }
+        ]
+    }
+]

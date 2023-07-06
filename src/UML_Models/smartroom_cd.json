@@ -48,11 +48,11 @@
                 },
             {
                 "name": "change",
-                "action":"ChangeColorOfLight('#FF0000')",
+                "action":"ChangeColorOfLight()",
                 "parameters": {
                     "turnon": true,
                     "brightness": 0,
-                    "hex": [{"red":"#FF0000"},{"pink":"#FF1493"},{"orange":"#FF4500"},{"yellow":"#FFFF00"},{"purple":"#800080"},{"green":"#008000"},{"blue":"#0000FF"},{"white":"#ffffff"}]
+                    "hex": [{"color":"red","value":"#FF0000"},{"color":"pink","value":"#FF1493"},{"color":"orange","value":"#FF4500"},{"color":"yellow","value":"#FFFF00"},{"color":"purple","value":"#800080"},{"color":"green","value":"#008000"},{"color":"blue","value":"#0000FF"},{"color":"white","value":"#ffffff"}]
                 }
             }
         ]

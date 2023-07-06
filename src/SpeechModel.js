@@ -21,6 +21,8 @@ function SpeechModel() {
   let operation_attribute_found = false;
   let device_id_found = false;
   let deviceType_Operation = false;
+  let colorMatched = false;
+  let color = "#ffffff";
   const {
     transcript,
     interimTranscript,
@@ -33,7 +35,7 @@ function SpeechModel() {
   const [response, setResponse] = React.useState({});
   const [token, setToken] = React.useState();
 
-  //compose a list of operations for device
+  //compose a list of operations for device type
   let speechModelData = [];
   for (let i = 0; i < ClassProperties.length; i++) {
     for (let j = 0; j < ClassProperties[i].operations.length; j++) {
@@ -44,6 +46,7 @@ function SpeechModel() {
             actions: ClassProperties[i].operations[j].name,
             device_id: ObjectProperties[k].name,
             operation: ClassProperties[i].operations[j].action,
+            action_parameter: ClassProperties[i].operations[j].parameters,
           });
         }
       }
@@ -243,8 +246,35 @@ function SpeechModel() {
       })
       .finally(() => console.log(result, "light turned off"));
   }
-  function ChangeColorOfLight(color) {
-    console.log(color);
+  function ChangeColorOfLight() {
+    let msg = new SpeechSynthesisUtterance();
+    const speech_input = transcript.toLowerCase().split(" ");
+    console.log("speech_input", speech_input);
+    colorMatched = false;
+    for (let i = 0; i < speechModelData[6].action_parameter.hex.length; i++) {
+      if (
+        speech_input.indexOf(
+          speechModelData[6].action_parameter.hex[i].color
+        ) !== -1
+      ) {
+        colorMatched = true;
+        color = speechModelData[6].action_parameter.hex[i].value;
+        console.log(
+          "color matched",
+          speechModelData[6].action_parameter.hex[i].color,
+          speechModelData[6].action_parameter.hex[i].value
+        );
+        msg.text = `The ${transcript} contains the color ${speechModelData[6].action_parameter.hex[i].color}, and the light is changed to color ${speechModelData[6].action_parameter.hex[i].color}`;
+        window.speechSynthesis.speak(msg);
+      }
+    }
+    if (!colorMatched) {
+      color = "#ff0000";
+      msg.text = `sorry the ${transcript} may contain a different color that may not be in the datamodel, so by default im changing the color to red, the available colors in the data model are ${speechModelData[6].action_parameter.hex.map(
+        (c) => c.color
+      )}`;
+      window.speechSynthesis.speak(msg);
+    }
     const data = {
       turnon: true,
       brightness: 0,

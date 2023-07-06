@@ -2,34 +2,12 @@
     {
         "name": "Ventilator",
         "type": "class",
-        "attributes": [
-            {
-                "name": "is_turned_on",
-                "type": "Boolean"
-            }
-        ],
         "operations": [
             {
-                "name": "toggle_ventilator",
-                "url":"/Rooms/0090/Ventilators/SmartPlug1/Activation",
+                "name": "toggle",
+                "action":"TogglePlug()",
                 "parameters": [],
                 "returnType": null                
-            },
-            {
-                "name": "turn_on_ventilator",
-                "url":"/Rooms/0090/Ventilators/SmartPlug1/Operations",
-                "parameters": {
-                    "turnon": true
-                  },
-                "returnType": null
-            },
-            {
-                "name": "turn_off_ventilator",
-                "url":"/Rooms/0090/Ventilators/SmartPlug1/Operations",
-                "parameters": {
-                    "turnon": false
-                  },
-                "returnType": null
             }
         ]
     },
@@ -38,7 +16,11 @@
         "type": "class",
         "attributes":[
             {
-                "name": "is_turned_on",
+                "name": "turnon",
+                "type": "Boolean"
+            },
+            {
+                "name": "turnon",
                 "type": "Boolean"
             },
             {
@@ -48,8 +30,8 @@
         ],
         "operations":[
             {
-                "name": "turn_on_light",
-                "url":"/Rooms/0090/Lights/Licht/Activation",
+                "name": "on",
+                "action":"TurnOnLight()",
                 "parameters": {
                     "turnon": true
                   },
@@ -57,20 +39,20 @@
                 "returnType": null
             },
             {
-                "name": "turn_off_light",
-                "url":"/Rooms/0090/Lights/Licht/Activation",
+                "name": "off",
+                "action":"TurnOFFLight()",
                 "parameters": {
                     "turnon": false
                   },
                 "returnType": null
                 },
             {
-                "name": "switch_color_to_*",
-                "url":"/Rooms/0090/Lights/Licht/SetColor",
+                "name": "change",
+                "action":"ChangeColorOfLight('#FF0000')",
                 "parameters": {
                     "turnon": true,
                     "brightness": 0,
-                    "hex": ""
+                    "hex": [{"red":"#FF0000"},{"pink":"#FF1493"},{"orange":"#FF4500"},{"yellow":"#FFFF00"},{"purple":"#800080"},{"green":"#008000"},{"blue":"#0000FF"},{"white":"#ffffff"}]
                 }
             }
         ]
@@ -98,7 +80,8 @@
         ],
         "operations":[
             {
-            "name":"get_air_quality",
+            "name":"get",
+            "action":"GetAirQuality()",
             "parameters": [],
             "returnType": "json"
             }

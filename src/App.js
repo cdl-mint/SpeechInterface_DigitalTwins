@@ -137,8 +137,9 @@ function App() {
         >
           <AirQualityContext.Provider value={airQualityData}>
             {/* <SpeechSynthesis /> */}
-            <SpeechRecognition />
+            {/* <SpeechRecognition /> */}
             {/* <Recognition /> */}
+            <SpeechModel />
           </AirQualityContext.Provider>
         </DigitalTwinStatusContext.Provider>
         {/* <NotificationComponent data={airQualityData} rules={Rules} /> */}

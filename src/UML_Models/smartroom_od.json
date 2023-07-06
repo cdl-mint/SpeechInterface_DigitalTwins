@@ -8,6 +8,14 @@
         "type": "Light"
     },
     {
+        "name": "SmartPlug2",
+        "type": "Ventilator"
+    },
+    {
+        "name": "Licht1",
+        "type": "Light"
+    },
+    {
         "name": "0090",
         "type": "Room",
         "relations":[

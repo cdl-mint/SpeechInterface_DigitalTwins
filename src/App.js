@@ -6,26 +6,13 @@ import SpeechRecognition from "./SpeechRecognition/SpeechRecognition";
 import NotificationComponent from "./Notification/Notification";
 import Rules from "./RuleSet";
 import axios from "axios";
-import { DigitalTwinContext } from "./DigitalTwinContext";
-import { DigitalTwinStatusContext } from "./DigitalTwinStatusContext";
-import { AirQualityContext } from "./AirQualityContext";
-import Recognition from "./WebSpeechAPI";
-// {
-//   "room_id": "0090",
-//   "device_id": "Raspi-3-1",
-//   "ventilator": "no",
-//   "co2": 788.54,
-//   "co2measurementunit": "ppm",
-//   "temperature": 32.34,
-//   "temperaturemeasurementunit": "degree celcius",
-//   "humidity": 28.14,
-//   "humiditymeasurementunit": "rh",
-//   "time": "2023-05-02T15:05:48.190911+00:00"
-// }
+import { DigitalTwinContext } from "../src/Context/DigitalTwinContext";
+import { DigitalTwinStatusContext } from "../src/Context/DigitalTwinStatusContext";
+import { AirQualityContext } from "../src/Context/AirQualityContext";
+import SpeechModel from "./SpeechModel";
 
 function App() {
   const [digitalTwinData, setDigitalTwinData] = React.useState([]);
-
   const [airQualityData, setAirQualityData] = React.useState([]);
   const [pages, setPages] = React.useState(1);
   const [lastRecord, setLastRecord] = React.useState([]);
@@ -49,7 +36,6 @@ function App() {
   }
   function CheckDigitalTwinsCapability(dtData, pageno) {
     if (dtData.map((i) => i === "AirQuality")) {
-      // console.log("comes here");
       let Results = axios
         .get(
           `https://airquality.se.jku.at/smartroomairquality-test/Room/0090/AirQuality/?page=${pageno}&size=100`
@@ -119,15 +105,17 @@ function App() {
   React.useEffect(() => {
     GetDigitalTwins();
   }, []);
+
   React.useEffect(() => {
     if (digitalTwinData.length) {
-      // console.log(digitalTwinData.length);
       CheckDigitalTwinsCapability(digitalTwinData, pages);
     }
   }, [digitalTwinData, pages]);
+
   React.useEffect(() => {
     checkDTActiveStatus(lastRecord);
   }, [lastRecord]);
+
   return (
     <div className="App">
       <DigitalTwinContext.Provider value={digitalTwinData}>
@@ -136,16 +124,12 @@ function App() {
           value={{ currentDTStatus, days, hours, minutes, lastRecord }}
         >
           <AirQualityContext.Provider value={airQualityData}>
-            {/* <SpeechSynthesis /> */}
-            {/* <SpeechRecognition /> */}
-            {/* <Recognition /> */}
             <SpeechModel />
           </AirQualityContext.Provider>
         </DigitalTwinStatusContext.Provider>
-        {/* <NotificationComponent data={airQualityData} rules={Rules} /> */}
       </DigitalTwinContext.Provider>
     </div>
   );
 }
-//export default App;
+
 export default App;

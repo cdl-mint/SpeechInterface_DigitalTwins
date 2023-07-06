@@ -5,14 +5,12 @@ import SpeechRecognition, {
 import axios from "axios";
 import ClassProperties from "./UML_Models/smartroom_cd.json";
 import ObjectProperties from "./UML_Models/smartroom_od.json";
-import { useCases, gettingStarted } from "./NLModel";
 import { DigitalTwinStatusContext } from "./Context/DigitalTwinStatusContext";
 import "./App.css";
 
 function SpeechModel() {
   const { currentDTStatus, days, hours, minutes, lastRecord } =
     React.useContext(DigitalTwinStatusContext);
-  const useCasesAvailable = [...useCases[0].capabilities];
   const [speechLog, setSpeechLog] = React.useState([]);
   let device_found = false;
   let device_type = "";
@@ -35,7 +33,7 @@ function SpeechModel() {
   const [response, setResponse] = React.useState({});
   const [token, setToken] = React.useState();
 
-  //compose a list of operations for device type
+  //parse model.json and compose a list of operations for device type
   let speechModelData = [];
   for (let i = 0; i < ClassProperties.length; i++) {
     for (let j = 0; j < ClassProperties[i].operations.length; j++) {
@@ -58,12 +56,12 @@ function SpeechModel() {
   function MappingModel(speechInput) {
     let msg = new SpeechSynthesisUtterance();
     if (speechInput) {
-      //create an array of speech input
+      //create an array of speech input to check for the keywords
       const speech_input_array = speechInput.toLowerCase().split(" ");
       device_found = false;
       console.log(speechInput, "received input");
 
-      //check for twin (classname)
+      //check for device type (classname)
       for (let twin = 0; twin < speechModelData.length; twin++) {
         console.log(
           "speech input index",
@@ -92,7 +90,7 @@ function SpeechModel() {
           break;
         }
       }
-      //check for action words
+      //check for operations
       for (let action = 0; action < speechModelData.length; action++) {
         if (
           speech_input_array.indexOf(speechModelData[action].actions) !== -1
@@ -121,7 +119,8 @@ function SpeechModel() {
       //     break;
       //   }
       // }
-      //device type and operations check
+
+      //check if device type and operations matches
       for (let i = 0; i < speechModelData.length; i++) {
         deviceType_Operation = false;
         if (
@@ -295,6 +294,7 @@ function SpeechModel() {
     return response;
   }
   function GetAirQuality() {
+    console.log(lastRecord);
     if (lastRecord) {
       let msg = new SpeechSynthesisUtterance();
       msg = new SpeechSynthesisUtterance();
@@ -316,21 +316,28 @@ function SpeechModel() {
         "en"
       )} rh`;
       window.speechSynthesis.speak(msg);
+    } else {
+      let msg = new SpeechSynthesisUtterance();
+      msg = new SpeechSynthesisUtterance();
+      msg.text = `There are no entry available for the air quality digital twins`;
+      window.speechSynthesis.speak(msg);
     }
   }
-  const handleListing = () => {
+  //listen to speech input
+  const handleListening = () => {
     setIsListening(true);
     microphoneRef.current.classList.add("listening");
     SpeechRecognition.startListening({
       continuous: true,
     });
   };
-
+  //stop listening
   const stopHandle = () => {
     setIsListening(false);
     microphoneRef.current.classList.remove("listening");
     SpeechRecognition.stopListening();
   };
+  //reset speech input
   const handleReset = () => {
     stopHandle();
     SpeechRecognition.abortListening();
@@ -342,6 +349,7 @@ function SpeechModel() {
     });
   }, [transcript, device_found, operation_found]);
   console.log(speechLog);
+
   return (
     <div className="microphone-wrapper">
       <h2>Speech Recognition</h2>
@@ -349,7 +357,7 @@ function SpeechModel() {
         <div
           className="microphone-icon-container"
           ref={microphoneRef}
-          onClick={handleListing}
+          onClick={handleListening}
         >
           <i class="fa-solid fa-microphone"></i>
         </div>
@@ -362,16 +370,16 @@ function SpeechModel() {
           </button>
         )}
       </div>
-      {/* {!device_found?} */}
-      {/* {matchedCommand.length < 1 ? errorHandling() : ""} */}
+      <br />
       {transcript && (
         <div className="microphone-result-container">
-          <div className="microphone-result-text">{transcript}</div>
+          <div className="microphone-result-text">{transcript}</div> <br />
           <button className="microphone-reset btn" onClick={handleReset}>
             Reset
           </button>
         </div>
       )}
+      <br />
       {transcript && (
         <div className="microphone-result-container">
           <button
@@ -406,38 +414,6 @@ function SpeechModel() {
           </div>
           <br />
         </div>
-        {/* <div className="right">
-          <div className="row">
-            <div className="col-sm-6">
-              <em>Matched command</em>
-            </div>
-            <div className="col-sm-6">{matchedCommand}</div>
-          </div>
-          <br />
-          <div className="row">
-            <div className="col-sm-6">
-              <em>spoken Input</em>
-            </div>
-            <div className="col-sm-6"> {speechInput}</div>
-          </div>
-          <br />
-          <div className="row">
-            <div className="col-sm-6">
-              <em>similarity Ratio</em>
-            </div>
-
-            <div className="col-sm-6">{matchingRatio}</div>
-          </div>
-          <br />
-          <div className="row">
-            <div className="col-sm-6">
-              <em>use case</em>
-            </div>
-
-            <div className="col-sm-6"> {useCase}</div>
-          </div>
-          <br />
-        </div> */}
       </div>
     </div>
   );

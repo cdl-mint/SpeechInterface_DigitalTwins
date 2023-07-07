@@ -1,18 +1,22 @@
 [
     {
         "name": "SmartPlug1",
+        "aliases": ["Smart Plug One"],
         "type": "Ventilator"
     },
     {
         "name": "Licht",
+        "aliases": ["Light Strip"],
         "type": "Light"
     },
     {
         "name": "SmartPlug2",
+        "aliases": ["Smart Plug Two"],
         "type": "Ventilator"
     },
     {
         "name": "Licht1",
+        "aliases": ["Light One"],
         "type": "Light"
     },
     {
@@ -31,6 +35,7 @@
     },
     {
         "name": "Room106",
+        "aliases": ["Room 106"],
         "type": "Room",
         "relations":[
             {

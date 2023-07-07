@@ -5,8 +5,7 @@
         "operations": [
             {
                 "name": "toggle",
-                "action":"TogglePlug()",
-                "parameters": [],
+                "aliases": ["flip"],
                 "returnType": null                
             }
         ]
@@ -16,11 +15,11 @@
         "type": "class",
         "attributes":[
             {
-                "name": "turnon",
+                "name": "turn_on",
                 "type": "Boolean"
             },
             {
-                "name": "turnon",
+                "name": "turn_on",
                 "type": "Boolean"
             },
             {
@@ -31,7 +30,6 @@
         "operations":[
             {
                 "name": "on",
-                "action":"TurnOnLight()",
                 "parameters": {
                     "turnon": true
                   },
@@ -40,7 +38,6 @@
             },
             {
                 "name": "off",
-                "action":"TurnOFFLight()",
                 "parameters": {
                     "turnon": false
                   },
@@ -48,11 +45,11 @@
                 },
             {
                 "name": "change",
-                "action":"ChangeColorOfLight()",
+                "aliases": ["switch", "set", "to"],
+                "action":"ChangeColorOfLight",
                 "parameters": {
                     "turnon": true,
-                    "brightness": 0,
-                    "hex": [{"color":"red","value":"#FF0000"},{"color":"pink","value":"#FF1493"},{"color":"orange","value":"#FF4500"},{"color":"yellow","value":"#FFFF00"},{"color":"purple","value":"#800080"},{"color":"green","value":"#008000"},{"color":"blue","value":"#0000FF"},{"color":"white","value":"#ffffff"}]
+                    "brightness": 0
                 }
             }
         ]
@@ -62,7 +59,8 @@
         "type": "class",
         "attributes":[
             {
-                "name": "co2",
+                "name": "CO2",
+                "aliases": ["C O Two"],
                 "type": "float"
             },
             {
@@ -75,17 +73,18 @@
             },
             {
                 "name": "numberOfPeople",
+                "aliases": ["number of people"],
                 "type": "int"
             }
         ],
         "operations":[
-            {
-            "name":"get",
-            "action":"GetAirQuality()",
+        {
+            "name": "get",
+            "aliases": ["summary", "summarize"],
+            "action":"GetAirQuality",
             "parameters": [],
             "returnType": "json"
-            }
-           
+        } 
         ],
         "relations":[
             {

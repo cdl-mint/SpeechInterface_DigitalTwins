@@ -1,0 +1,226 @@
+[    
+    {
+        "name": "Device",
+        "extends": "BaseClass"
+    },
+    {
+        "name": "NiryoNed1",
+        "extends": "Device",
+        "attributes": [
+            {
+                "name": "calibrated",
+                "aliases": ["status"],
+                "type": "boolean",
+                "endpoint": "/Robots/Calibration",
+                "action": "RobotAttribute"
+            },
+            {
+                "name": "gripper_open",
+                "type": "boolean",
+                "endpoint": "/Robots/Gripper",
+                "action": "RobotAttribute"
+            }
+        ],
+        "operations": [
+            {
+                "name": "calibrate",
+                "endpoint": "/Robots/Calibration",
+                "action": "RobotAction"
+            },
+            {
+                "name": "ready",
+                "aliases": ["neutral"],
+                "endpoint": "/Robots/Action",
+                "action": "RobotAction",
+                "data": {
+                    "action": "neutral"
+                }
+            },
+            {
+                "name": "wave",
+                "aliases": ["hi"],
+                "action": "RobotAction",
+                "endpoint": "/Robots/Action/",
+                "data": {
+                    "action": "hi"
+                }
+            },
+            {
+                "name": "queen",
+                "action": "RobotAction",
+                "endpoint": "/Robots/Action/",
+                "data": {
+                    "action": "queen"
+                }
+            },
+            {
+                "name": "sleep",
+                "action": "RobotAction",
+                "aliases": ["stand down", "hide", "down"],
+                "endpoint": "/Robots/Action/",
+                "data": {
+                    "action": "sleep"
+                }
+            },
+            {
+                "name": "bye",
+                "action": "RobotAction",
+                "aliases": ["goodbye", "bye-bye"],
+                "endpoint": "/Robots/Action/",
+                "data": {
+                    "action": "bye"
+                }
+            },
+            {
+                "name": "open",
+                "action": "RobotAction",
+                "aliases": ["wide", "drop", "release"],
+                "endpoint": "/Robots/Gripper",
+                "data": {
+                    "open": true
+                }
+            },
+            {
+                "name": "close",
+                "action": "RobotAction",
+                "aliases": ["shut", "grab"],
+                "endpoint": "/Robots/Gripper",
+                "data": {
+                    "open": false
+                }
+            },
+            {
+                "name": "pickupleft",
+                "action": "RobotAction",
+                "aliases": ["pick up left", "pickup left", "take left"],
+                "endpoint": "/Robots/Action",
+                "data": {
+                    "action": "pickup-left"
+                }
+            },
+            {
+                "name": "pickupright",
+                "action": "RobotAction",
+                "aliases": ["pick up right", "pickup right", "take right"],
+                "endpoint": "/Robots/Action",
+                "data": {
+                    "action": "pickup-right"
+                }
+            },
+            {
+                "name": "putleft",
+                "action": "RobotAction",
+                "aliases": ["place left", "put left"],
+                "endpoint": "/Robots/Action",
+                "data": {
+                    "action": "place-left"
+                }
+            },
+            {
+                "name": "putright",
+                "action": "RobotAction",
+                "aliases": ["place right", "put right"],
+                "endpoint": "/Robots/Action",
+                "data": {
+                    "action": "place-right"
+                }
+            }
+
+        ]
+    },
+    {
+        "name": "Conveyor",
+        "extends": "Device",
+        "attributes": [
+            {
+                "name": "speed",
+                "aliases": ["velocity"],
+                "type": "int",
+                "endpoint": "/Robots/Conveyor",
+                "action": "RobotAttribute"
+            },
+            {
+                "name": "direction",
+                "type": "string",
+                "endpoint": "/Robots/Conveyor",
+                "action": "ConveyorDirectionAttribute"
+            },
+            {
+                "name": "is_moving",
+                "type": "boolean",
+                "endpoint": "/Robots/Conveyor",
+                "action": "ConveyorOnAttribute"
+            }
+        ],
+        "operations": [
+            {
+                "name": "run",
+                "aliases": ["move", "forward", "on", "start", "go"],
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/",
+                "data": {
+                    "forward": true,
+                    "on": true
+                }
+            },
+            {
+                "name": "moveback",
+                "aliases": ["back", "move back", "backward"],
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/",
+                "data": {
+                    "forward": false,
+                    "on": true
+                }
+            },
+            {
+                "name": "faster",
+                "aliases": ["speed up"],
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/faster"
+            },
+            {
+                "name": "slower",
+                "aliases": ["slow down"],
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/slower"
+            },
+            {
+                "name": "slow",
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/",
+                "data": {
+                    "speed": 20,
+                    "on": true
+                }
+            },
+            {
+                "name": "fast",
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/",
+                "data": {
+                    "speed": 80,
+                    "on": true
+                }
+            },
+            {
+                "name": "half",
+                "action": "RobotAction",
+                "endpoint": "/Robots/Conveyor/",
+                "data": {
+                    "speed": 50,
+                    "on": true
+                }
+            },
+            {
+                "name": "stop",
+                "action": "RobotAction",
+                "aliases": ["halt", "off"],
+                "endpoint": "/Robots/Conveyor/",
+                "data": {
+                    "on": false
+                }
+            }
+        ]
+    }
+]

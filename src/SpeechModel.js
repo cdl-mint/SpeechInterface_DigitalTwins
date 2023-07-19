@@ -3,8 +3,11 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import axios from "axios";
-import ClassProperties from "./UML_Models/smartroom_cd.json";
-import ObjectProperties from "./UML_Models/smartroom_od.json";
+import SmartroomClassProperties from "./UML_Models/smartroom_cd.json";
+import SmartroomObjectProperties from "./UML_Models/smartroom_od.json";
+import RobotClassProperties from "./UML_Models/ned_cd.json";
+import RobotObjectProperties from "./UML_Models/ned_od.json";
+
 import { DigitalTwinStatusContext } from "./Context/DigitalTwinStatusContext";
 import "./App.css";
 
@@ -19,12 +22,17 @@ function SpeechModel() {
     interimTranscript,
     finalTranscript,
     resetTranscript,
-    listening,
+    listening, 
   } = useSpeechRecognition();
   const [isListening, setIsListening] = React.useState(false);
   const microphoneRef = React.useRef(null);
   const [response, setResponse] = React.useState({});
   const [token, setToken] = React.useState();
+  const SMARTROOM_BASE_URL = "https://airquality.se.jku.at/smartroomairquality-test";
+  const ROBOT_BASE_URL = "https://localhost:8000";
+
+  const ClassProperties = [...SmartroomClassProperties, ...RobotClassProperties];
+  const ObjectProperties = [...SmartroomObjectProperties, ...RobotObjectProperties];
 
   function speak(text_to_speak) {
     /* Say something out loud. Also log to the console. */
@@ -85,6 +93,68 @@ function SpeechModel() {
     return undefined;
   };
 
+  function handle_attribute_command(device, attribute, speechInput) {
+    function _matchDate(someDate, otherDate) {
+      return someDate.getDate() == otherDate.getDate() &&
+        someDate.getMonth() == otherDate.getMonth() &&
+        someDate.getFullYear() == otherDate.getFullYear()
+    }
+
+    const records = get_attribute_values(device, attribute, speechInput);
+    let filtered_records = records;
+    let filter_string = "";
+    
+    if(speech_match(speechInput, ["today"])) { 
+      filter_string = "today's";
+      const today = new Date();
+      filtered_records = records.filter(r => _matchDate(new Date(r.time), today));
+    } else if(speech_match(speechInput, ["yesterday"])) { 
+      filter_string = "yesterday's";
+      let yesterday = new Date(new Date().setDate(new Date().getDate()-1));
+      filtered_records = records.filter(r => _matchDate
+        (new Date(r.time), yesterday));
+    } else if(speech_match(speechInput, "this week")) {
+      filter_string = "this week's";
+      filtered_records = records.filter(r => new Date(r.time).getWeekNumber() == new Date().getWeekNumber());
+    }
+    if(filtered_records.length == 0) {
+      speak(`I'm sorry, there seem to be no records for attribute ${attribute.name} of device ${device.name} matching your query.`);
+      return;
+    }
+    
+    if(speech_match(speechInput, [
+      "average", "mean", 
+      "max", "maximum", "highest", 
+      "min", "minimum", "lowest",
+      "last"])){  // if any aggregator values !
+
+      const vals_only = filtered_records.map(r => r[attribute.name]);
+      let aggregator = "";
+      let val = null;
+
+      if(speech_match(speechInput, ["average", "mean"])) {
+        aggregator = "average";
+        val = vals_only.reduce((a, b) => a+b) / vals_only.length;
+      } else if(speech_match(speechInput, ["max", "maximum", "highest"])) {
+        aggregator = "maximum";
+        val = Math.max(...vals_only);
+      } else if(speech_match(speechInput, ["min", "minimum", "lowest"])) {
+        aggregator = "minimum";
+        val = Math.min(...vals_only);
+      } else if(speech_match(speechInput, ["current", "last"])) {
+        aggregator = "last";
+        val = filtered_records.at(-1)[attribute.name];
+      }
+      speak(`Getting ${filter_string} ${aggregator} value of attribute ${attribute.name} of device ${device.name}`); 
+      speak(`The ${aggregator} value of the attribute ${attribute.name} of device ${device.name} is ${val}`);
+    } else {  // Default, get last value!
+      speak(`Getting last value of attribute ${attribute.name} of device ${device.name}`);     
+      const last = records.at(-1);
+      console.log("last", last);
+      speak(`The last value of the attribute ${attribute.name} of device ${device.name} is ${last[attribute.name]}`);
+    }
+  };
+
   function handle_device_command(device, speechInput) {
     let cd_class = get_type_by_name(device.type);
     console.log("Got the class", cd_class?.name);
@@ -109,10 +179,18 @@ function SpeechModel() {
       return true;
 
     } else if (attribute != undefined) {
-      speak(`Getting value of attribute ${attribute.name} of device ${device.name}`);
-      // TODO: Needs to be implemented...
-      
+      // check if it's robot attributes
+      if(device.type == "NiryoNed1" || device.type == "Conveyor") {
+        let action = attribute.action || "RobotAttribute";
+        let cmd = `${action}(device, attribute);`
+        console.log("Going to eval the following: ", cmd);
+        eval(cmd);
+        return true;
+      }
 
+
+      // get all attribute values !
+      return handle_attribute_command(device, attribute, speechInput);
     } else { // Report something about the object.
       speak(`You mentioned the device ${device.name} but no action or attribute.`);
       if(cd_class.hasOwnProperty("operations")) {
@@ -129,6 +207,12 @@ function SpeechModel() {
 
   /*function to parse the speech input*/
   function MappingModel(speechInput) {
+    resetTranscript();
+
+    if(speechInput == ""){
+      return;
+    }
+
     console.log("Received input:", speechInput);
     speechInput = speechInput.toLowerCase().split(" ");  // safety first...
 
@@ -168,117 +252,6 @@ function SpeechModel() {
       speak(`There is no speech input`);
     }
     return true;
-    /*
-      //create an array of speech input to check for the keywords
-      const speech_input_array = speechInput.toLowerCase().split(" ");
-      device_found = false;
-      console.log(speechInput, "received input");
-
-      //check for device type (classname)
-      for (let twin = 0; twin < speechModelData.length; twin++) {
-        console.log(
-          "speech input index",
-          speech_input_array.indexOf(
-            speechModelData[twin].device_type.toLowerCase()
-          )
-        );
-        if (
-          speech_input_array.indexOf(
-            speechModelData[twin].device_type.toLowerCase()
-          ) !== -1
-        ) {
-          device_type = speechModelData[twin].device_type;
-          console.log(
-            "class matched " +
-              speech_input_array[
-                speech_input_array.indexOf(
-                  speechModelData[twin].device_type.toLowerCase()
-                )
-              ]
-          );
-          device_found = true;
-          speak(`The ${transcript} matches with the device ${speechModelData[twin].device_type}`);
-          stopHandle();
-          break;
-        }
-      }
-      //check for operations
-      for (let action = 0; action < speechModelData.length; action++) {
-        if (
-          speech_input_array.indexOf(speechModelData[action].actions) !== -1
-        ) {
-          actionWord = speechModelData[action].actions;
-          console.log(actionWord);
-          console.log(
-            speech_input_array,
-            speech_input_array.indexOf(speechModelData[action].actions),
-            speechModelData[action].actions
-          );
-          speak(`The ${transcript} matches with the operation ${speechModelData[action].actions}`);
-          operation_found = true;
-          stopHandle();
-          break;
-        }
-      }
-      //   check for device id
-      // for (let deviceId = 0; deviceId < speechModelData.length; deviceId++) {
-      //   if (speech_input_array.indexOf(speechModelData[deviceId].id) !== -1) {
-      //     device_id_found = true;
-      //     msg.text = `The ${transcript} contains the device id ${speechModelData[deviceId]}`;
-      //     window.speechSynthesis.speak(msg);
-      //     stopHandle();
-      //     break;
-      //   }
-      // }
-
-      //check if device type and operations matches
-      for (let i = 0; i < speechModelData.length; i++) {
-        deviceType_Operation = false;
-        if (
-          speechModelData[i].actions === actionWord &&
-          speechModelData[i].device_type === device_type
-        ) {
-          deviceType_Operation = true;
-          eval(speechModelData[i].operation);
-          speak(`The ${transcript} matches with the device type and the operation, the operation is executed `);
-          stopHandle();
-          break;
-        }
-      }
-
-      if (!device_found) {
-        speak(`The ${transcript} does not match with the device type ${ClassProperties.map(
-          (d) => d.name
-        )} twin`);
-      }
-
-      if (!operation_found) {
-        speak(`The ${transcript} does not match with the operation ${ClassProperties.map(
-          (o) => o.operations.map((op) => op.name)
-        )}`);
-      }
-
-      // if (!device_id_found) {
-      //   msg.text = `The ${transcript} does not match with any of device id ${speechModelData.map(
-      //     (o) => o.device_id
-      //   )}`;
-      //   window.speechSynthesis.speak(msg);
-      // }
-      if (!deviceType_Operation) {
-        speak(`The ${transcript} does not match with the correct device type ${ClassProperties.map(
-          (d) => d.name
-        )} and operations ${ClassProperties.map((o) =>
-          o.operations.map((op) => op.name)
-        )}`);
-      }
-    }
-    //no speech input
-    else {
-      speak(`There is no speech input`);
-    }
-    return "ok";
-
-    */
   }
 
   function Authenticate() {
@@ -301,35 +274,203 @@ function SpeechModel() {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
+      'Access-Control-Allow-Origin' : '*',
+      'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',
     },
   };
 
-  function compose_url(device, activation){
-    return new URL(activation, `https://airquality.se.jku.at/smartroomairquality/Rooms/0090/${device.type}s/${device.name}/`);
+  function get_attribute_values(device, attribute) {
+    console.log("Fetching all attribute values for", device.name, "-> ", attribute.name);
+    let url = `${SMARTROOM_BASE_URL}/Room/0090/AirQuality/${attribute.name}/`;
+    // console.log("GET request url", url);
+    let res = fetch_all_records(url);
+    return res;
   };
 
-  function send_request(url, data){
-    console.log("Sending request to", url, "data: ", data);
-    const result = axios
-      .post(url, data, config)
+function compose_url(device, activation){
+    return new URL(activation, `${SMARTROOM_BASE_URL}/Rooms/0090/${device.type}s/${device.name}/`)
+  };
+
+  function get_request(url, page=1, size=100) {
+    let full_url = `${url}?page=${page}&size=${size}`;
+    console.log("GET this URL", full_url);
+    let result = axios
+      .get(full_url, config)
       .then((response) => {
         setResponse(response.data);
       })
-      .catch(() => {
-        Authenticate();
-      });
-
-    console.log("Request result", result);
-    return response;
+      .catch((error) => {console.error(error); setResponse(null); } );
+      console.log("GET Request result", result);
+      return response;
   };
 
-  function DefaultAction(device, operation, speech_input) {
-    const data = operation.parameters || {};
+function send_request(url, data){
+  console.log("Sending request to", url, "data: ", data);
+  const result = axios
+    .post(url, data, config)
+    .then((response) => {
+      setResponse(response.data);
+    })
+    .catch(() => {
+      Authenticate();
+    });
+
+  console.log("Request result", result);
+  return result;
+};
+
+
+  function fetch_all_records(url) {
+    const firstpage = get_request(url);
+    // console.log("firstpage", firstpage);
+
+    const max_pages = firstpage.pages;
+    const size = firstpage.size;
+
+    let pages = [];
+
+    for(let page_idx = 1; page_idx <= max_pages; page_idx++){
+      const page = get_request(url, page_idx, size);
+      console.log("Result #", page_idx, page);
+      pages.push(page);
+    }
+
+    console.log("All pages", pages);
+
+    let all_records = [];
+    pages.forEach(p => p?.items.forEach(e => all_records.push(e)));
+
+    let sorted_records = all_records.sort((a, b) => {
+      return new Date(a.time) - new Date(b.time);
+    });
+
+    return sorted_records;
+  };
+
+
+function send_request(url, data){
+  console.log("Sending request to", url, "data: ", data);
+  const result = axios
+    .post(url, data, config)
+    .then((response) => {
+      setResponse(response.data);
+    })
+    .catch(() => {
+      Authenticate();
+    });
+
+  console.log("Request result", result);
+  return result;
+};
+
+const RobotAxios = axios.create({
+  baseURL: "http://127.0.0.1:8000",
+  withCredentials: true
+})
+
+function robot_request(url, data){
+  console.log("Sending request to", url, "data: ", data);
+  const result = RobotAxios
+    .post(url, data, config)
+    .then((response) => {
+      setResponse(response.data);
+    })
+    .catch(() => {
+    });
+
+  console.log("Request result", result);
+  return response;
+};
+
+function robot_get(url){
+  console.log("Sending GET request to", url);
+  const result = RobotAxios
+    .get(url, config)
+    .then((response) => {
+      setResponse(response.data);
+    })
+    .catch(() => {
+    });
+
+  console.log("GET result", result);
+  return response;
+};
+
+function RobotAction(device, operation, speech_input) {
+  const data = operation.data || {};
+  const url = new URL(operation.endpoint, `http://127.0.0.1:8000/`);
+  console.log("RobotAction! POST to ", url, "payload", data);
+  let response = robot_request(url, data);
+  console.log("RESPONSE result", response);
+  if(response == false){
+    speak("The response is: I'm sorry Dave, I'm afraid I can't do that");
+  }
+};
+
+function RobotAttribute(device, attribute) {
+  const url = new URL(attribute.endpoint, `http://127.0.0.1:8000/`);
+  const response = robot_get(url);
+  console.log("RobotAttribute Response", response);
+  speak(`The value of attribute ${attribute.name} of device ${device.name} is: ${response[attribute.name]}`);
+};
+
+function ConveyorOnAttribute(device, attribute) {
+  const url = new URL(attribute.endpoint, `http://127.0.0.1:8000/`);
+  const response = robot_get(url);
+  console.log("RobotAttribute Response", response);
+  let on = response['on'] ? "on" : "off";
+  speak(`Right now, the conveyor is: ${on}`);
+};
+
+function ConveyorDirectionAttribute(device, attribute) {
+  const url = new URL(attribute.endpoint, `http://127.0.0.1:8000/`);
+  const response = robot_get(url);
+  console.log("RobotAttribute Response", response);
+  if(response["on"]) {
+    let dir = response['forward'] ? "forward" : "backward";
+    speak(`The moving direction of the conveyor is: ${dir}`);
+  } else {
+    speak(`The conveyor is stopped`);
+  }
+};
+
+function DefaultAction(device, operation, speech_input) {
+    const data = operation.data || {};
     const activation = operation.activation || "Activation";
     return send_request(compose_url(device, activation), data);
-  };
+};
 
-  function color2hex(colorname) {
+function GetAirQuality(device, operation, speech_input) {
+    console.log("GetAirQuality", device, operation, speech_input);
+    
+    const url = `${SMARTROOM_BASE_URL}/Room/${device.name}/AirQuality/`;
+    const records = fetch_all_records(url);
+
+    let lastRecord = records.at(-1);
+    console.log("Last record", lastRecord);
+    console.log("Last time", new Date(lastRecord.time));
+    // TODO: The data is always the same ???
+    if (lastRecord) {
+      speak(`The air quality digital twin is currently ${currentDTStatus}, last recorded measurement was
+              ${
+                days
+                  ? days.toLocaleString("en") + "days"
+                  : hours
+                  ? hours.toLocaleString("en") + "hours"
+                  : minutes
+                  ? minutes.toLocaleString("en") + "minutes"
+                  : "not found"
+              } ago.
+              The last record observed is carbondioxide ${lastRecord.co2.toLocaleString("en")} ppm, 
+              temperature is ${lastRecord.temperature.toLocaleString("en")} degree celcius, 
+              and humidity is ${lastRecord.humidity.toLocaleString("en")} rh`);
+    } else {
+      speak(`There are no entry available for the air quality digital twins`);
+    }
+};
+
+
+function color2hex(colorname) {
     // TODO: w3schools color picker ?
     switch(colorname) {
       case "red":
@@ -354,54 +495,29 @@ function SpeechModel() {
   };
 
   function ChangeColorOfLight(device, operation, speech_input) {
-    console.log("ChangeColorOfLight", device, operation, speech_input);
-    const colors = ["red", "pink", "orange", "yellow", "purple", "green", "blue", "white"];
-    let selected = colors.find(col => speech_match(speech_input, col));
-    console.log("selected", selected);
-    if(selected == undefined){  // exit if we didn't find a colour.
-      speak("Could not identify a color. Please repeat and say one of the following colors:");
-      speak(colors.join(", "));
-      return;
-    }
-    console.log("Color name", selected);    
-    let hex = color2hex(selected);
+      console.log("ChangeColorOfLight", device, operation, speech_input);
+      const colors = ["red", "pink", "orange", "yellow", "purple", "green", "blue", "white"];
+      let selected = colors.find(col => speech_match(speech_input, col));
+      console.log("selected", selected);
+      if(selected == undefined){  // exit if we didn't find a colour.
+        speak("Could not identify a color. Please repeat and say one of the following colors:");
+        speak(colors.join(", "));
+        return;
+      }
+      console.log("Color name", selected);    
+      let hex = color2hex(selected);
 
-    console.log(`Setting color of ${device.name} to ${hex}`);
+      console.log(`Setting color of ${device.name} to ${hex}`);
 
-    let data = operation.parameters || {};
-    data["hex"] = hex;
-    console.log(compose_url(device, "SetColor").toString());
-    console.log("data", data);
+      let data = operation.parameters || {};
+      data["hex"] = hex;
+      console.log(compose_url(device, "SetColor").toString());
+      console.log("data", data);
 
-    return send_request(compose_url(device, "SetColor"), data);
+      return send_request(compose_url(device, "SetColor"), data);
   };
 
-  function GetAirQuality(device, operation, speech_input) {
-    console.log("GetAirQuality", device, operation, speech_input);
-    console.log("lastRecord", lastRecord);
-    if (lastRecord) {   // TODO: Somehow lastRecord is an empty list ... but we don't check for that.
-      speak(`The air quality digital twin is currently ${currentDTStatus}, last recorded measurement was
-                                 ${
-                                   days
-                                     ? days.toLocaleString("en") + "days"
-                                     : hours
-                                     ? hours.toLocaleString("en") + "hours"
-                                     : minutes
-                                     ? minutes.toLocaleString("en") + "minutes"
-                                     : "not found"
-                                 } ago ,
-                           The last record observed is carbondioxide ${lastRecord.co2.toLocaleString(
-                             "en"
-                           )} ppm, temperature is ${lastRecord.temperature.toLocaleString(
-        "en"
-      )} degree celcius, and humidity is ${lastRecord.humidity.toLocaleString(
-        "en"
-      )} rh`);
-    } else {
-      speak(`There are no entry available for the air quality digital twins`);
-    }
-  };
-
+  
   //listen to speech input
   const handleListening = () => {
     setIsListening(true);
@@ -427,7 +543,7 @@ function SpeechModel() {
       transcript: transcript,
     });
   }, [transcript, device_found, operation_found]);
-  console.log(speechLog);
+  // console.log(speechLog);
 
   return (
     <div className="microphone-wrapper">
@@ -436,18 +552,20 @@ function SpeechModel() {
         <div
           className="microphone-icon-container"
           ref={microphoneRef}
-          onClick={handleListening}
+          onMouseDown={() => {window.speechSynthesis.cancel(); resetTranscript(); handleListening();}}
+          onMouseUp={() => {stopHandle(); MappingModel(transcript); handleReset() }}
+          // onClick={handleListening}
         >
-          <i class="fa-solid fa-microphone"></i>
+          <i className="fa-solid fa-microphone fa-2xl"></i>
         </div>
         <div className="microphone-status">
           {isListening ? "Listening........." : "Click to start listening"}
         </div>
-        {isListening && (
+        {/* {isListening && (
           <button className="microphone-stop btn" onClick={() => {stopHandle(); MappingModel(transcript); handleReset() }}>
             Stop
           </button>
-        )}
+        )} */}
       </div>
       <br />
       {/* {transcript && (
@@ -468,6 +586,7 @@ function SpeechModel() {
             Speech output
           </button>
         </div>
+        
       )} */}
       <div className="container">
         <div className="left">
@@ -492,10 +611,12 @@ function SpeechModel() {
             <div className="col-sm-6">{finalTranscript}</div>
           </div>
           <br />
+          <input id="debuginput" placeholder="Write Text to debug" />
+          <button onClick={() => {MappingModel(document.getElementById('debuginput').value);}}>TEST</button>
         </div>
       </div>
     </div>
-  );
+  ); 
 }
 
 export default SpeechModel;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import "../App.css";
-import { AirQualityContext } from "../DigitalTwinContext";
+import { AirQualityContext } from "../Context/DigitalTwinContext";
 //interactions for AQ, SR
 /* {
     "room_id": "0090",

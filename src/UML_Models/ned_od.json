@@ -1,0 +1,12 @@
+[
+    {
+        "name": "Robot",
+        "aliases": ["Robert", "Robby", "Ned", "Arm"],
+        "type": "NiryoNed1"
+    },
+    {
+        "name": "Conveyor",
+        "aliases": ["Belt", "Band", "Tape"],
+        "type": "Conveyor"
+    }
+]

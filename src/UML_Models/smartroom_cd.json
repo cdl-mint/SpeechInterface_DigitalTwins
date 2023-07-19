@@ -1,44 +1,33 @@
 [
     {
+        "name": "Device",
+        "extends": "BaseClass"
+    },
+    {
         "name": "Ventilator",
-        "type": "class",
+        "type": "Device",
         "operations": [
             {
                 "name": "toggle",
-                "aliases": ["flip"],
+                "aliases": ["flip", "flick"],
                 "returnType": null                
             }
         ]
     },
     {
         "name": "Light",
-        "type": "class",
-        "attributes":[
-            {
-                "name": "turn_on",
-                "type": "Boolean"
-            },
-            {
-                "name": "turn_on",
-                "type": "Boolean"
-            },
-            {
-                "name": "color",
-                "type": "String"
-            }
-        ],
+        "extends": "Device",
         "operations":[
             {
                 "name": "on",
-                "parameters": {
+                "data": {
                     "turnon": true
-                  },
-               
+                },
                 "returnType": null
             },
             {
                 "name": "off",
-                "parameters": {
+                "data": {
                     "turnon": false
                   },
                 "returnType": null
@@ -56,32 +45,30 @@
     },
     {
         "name": "Room",
-        "type": "class",
+        "extends": "Device",
         "attributes":[
             {
-                "name": "CO2",
-                "aliases": ["C O Two"],
-                "type": "float"
+                "name": "co2",
+                "aliases": ["CO2", "C O Two"],
+                "type": "float",
+                "temporal": true
             },
             {
                 "name": "temperature",
-                "type": "float"
+                "type": "float",
+                "temporal": true
             },
             {
                 "name": "humidity",
-                "type": "float"
-            },
-            {
-                "name": "numberOfPeople",
-                "aliases": ["number of people"],
-                "type": "int"
+                "type": "float",
+                "temporal": true
             }
         ],
         "operations":[
         {
             "name": "get",
             "aliases": ["summary", "summarize"],
-            "action":"GetAirQuality",
+            "action": "GetAirQuality",
             "parameters": [],
             "returnType": "json"
         } 

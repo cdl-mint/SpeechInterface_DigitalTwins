@@ -1,14 +1,10 @@
 import * as React from "react";
 import "./App.css";
-import SpeechSynthesis from "./SpeechSynthesis/SpeechSynthesis";
 import Interactions from "./Interactions/Interactions";
-import SpeechRecognition from "./SpeechRecognition/SpeechRecognition";
-import NotificationComponent from "./Notification/Notification";
-import Rules from "./RuleSet";
 import axios from "axios";
-import { DigitalTwinContext } from "../src/Context/DigitalTwinContext";
-import { DigitalTwinStatusContext } from "../src/Context/DigitalTwinStatusContext";
-import { AirQualityContext } from "../src/Context/AirQualityContext";
+import { DigitalTwinContext } from "./Context/DigitalTwinContext";
+import { DigitalTwinStatusContext } from "./Context/DigitalTwinStatusContext";
+import { AirQualityContext } from "./Context/AirQualityContext";
 import SpeechModel from "./SpeechModel";
 
 function App() {
@@ -119,7 +115,6 @@ function App() {
   return (
     <div className="App">
       <DigitalTwinContext.Provider value={digitalTwinData}>
-        <Interactions />
         <DigitalTwinStatusContext.Provider
           value={{ currentDTStatus, days, hours, minutes, lastRecord }}
         >
@@ -127,6 +122,7 @@ function App() {
             <SpeechModel />
           </AirQualityContext.Provider>
         </DigitalTwinStatusContext.Provider>
+        <Interactions />
       </DigitalTwinContext.Provider>
     </div>
   );

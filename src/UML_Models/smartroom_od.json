@@ -1,7 +1,7 @@
 [
     {
         "name": "SmartPlug1",
-        "aliases": ["Smart Plug One"],
+        "aliases": ["Smart Plug One", "Fan"],
         "type": "Ventilator"
     },
     {
@@ -10,17 +10,7 @@
         "type": "Light"
     },
     {
-        "name": "SmartPlug2",
-        "aliases": ["Smart Plug Two"],
-        "type": "Ventilator"
-    },
-    {
-        "name": "Licht1",
-        "aliases": ["Light One"],
-        "type": "Light"
-    },
-    {
-        "name": "0090",
+        "name": "Room0090",
         "type": "Room",
         "relations":[
             {
@@ -30,21 +20,6 @@
             {
                 "type": "ventilators",
                 "target": "SmartPlug1"
-            }
-        ]
-    },
-    {
-        "name": "Room106",
-        "aliases": ["Room 106"],
-        "type": "Room",
-        "relations":[
-            {
-                "type": "lights",
-                "target": "Light2"
-            },
-            {
-                "type": "ventilators",
-                "target": "Ventilator2"
             }
         ]
     }
